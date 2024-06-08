@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <string>
+#include "CycleTimer.h"
 
+extern void saxpySerial(int N, float a, float* X, float* Y, float* result);
 void saxpyCuda(int N, float alpha, float* x, float* y, float* result);
 void printCudaInfo();
 
@@ -14,13 +16,23 @@ void usage(const char* progname) {
     printf("  -?  --help             This message\n");
 }
 
+static float
+toBW(int bytes, float sec) {
+    return static_cast<float>(bytes) / (1024. * 1024. * 1024.) / sec;
+}
+
+static float
+toGFLOPS(int ops, float sec) {
+    return static_cast<float>(ops) / 1e9 / sec;
+}
 
 int main(int argc, char** argv)
 {
 
     // default: arrays of 100M numbers
-    int N = 100 * 1000 * 1000;
-
+    int N = 1000 * 1000 * 1000;
+    const unsigned int TOTAL_BYTES = 4 * N * sizeof(float);
+    const unsigned int TOTAL_FLOPS = 2 * N;
     // parse commandline options ////////////////////////////////////////////
     int opt;
     static struct option long_options[] = {
@@ -55,10 +67,26 @@ int main(int argc, char** argv)
 
     printCudaInfo();
     
-    printf("Running 3 timing tests:\n");
+    printf("Running 3 timing tests for saxpySerial:\n");
+    double minSerial = 1e30;
+    for (int i = 0; i < 3; ++i) {
+        double startTime =CycleTimer::currentSeconds();
+        saxpySerial(N, alpha, xarray, yarray, resultarray);
+        double endTime = CycleTimer::currentSeconds();
+        minSerial = std::min(minSerial, endTime - startTime);
+    }
+
+    
+    printf("[saxpy serial]:\t\t[%.3f] ms\t[%.3f] GB/s\t[%.3f] GFLOPS\n",
+          minSerial * 1000,
+          toBW(TOTAL_BYTES, minSerial),
+          toGFLOPS(TOTAL_FLOPS, minSerial));
+
+    printf("Running 3 timing tests for saxpyCuda:\n");
     for (int i=0; i<3; i++) {
       saxpyCuda(N, alpha, xarray, yarray, resultarray);
     }
+
 
     delete [] xarray;
     delete [] yarray;

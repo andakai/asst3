@@ -5,7 +5,7 @@ CU_FILES   := saxpy.cu
 
 CU_DEPS    :=
 
-CC_FILES   := main.cpp
+CC_FILES   := main.cpp saxpySerial.cpp
 
 ###########################################################
 
@@ -25,7 +25,7 @@ NVCC=nvcc
 NVCCFLAGS=-O3 -m64
 
 
-OBJS=$(OBJDIR)/main.o  $(OBJDIR)/saxpy.o
+OBJS=$(OBJDIR)/main.o  $(OBJDIR)/saxpy.o $(OBJDIR)/saxpySerial.o
 
 
 .PHONY: dirs clean

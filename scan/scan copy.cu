@@ -256,12 +256,11 @@ int find_repeats(int* device_input, int length, int* device_output) {
     // exclusive_scan function with them. However, your implementation
     // must ensure that the results of find_repeats are correct given
     // the actual array length.
-    int N = nextPow2(length);
+   
     int *device_flags;
     int *prefix_sum;
-    //这里如果是length就会有错误，未知
-    cudaMalloc(&device_flags, N * sizeof(int));
-    cudaMalloc(&prefix_sum, N * sizeof(int));
+    cudaMalloc(&device_flags, length * sizeof(int));
+    cudaMalloc(&prefix_sum, length * sizeof(int));
     //每个线程处理一个数
     int blockNum = (length + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     flagRepeat<<<blockNum, THREADS_PER_BLOCK>>>(device_input, length, device_flags, prefix_sum);
